@@ -1,0 +1,2 @@
+/api/*  https://sample-formcompanystore-form-api-this.onrender.com/api/:splat  200
+/*      /index.html  200
