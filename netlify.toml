@@ -1,0 +1,18 @@
+# The deployable site is the React + Vite app in frontend/.
+# The Express/MySQL API in backend/ is not built or hosted by this config.
+[build]
+  base = "frontend"
+  # Install from the lockfile first (including devDependencies, where Vite
+  # lives) so the build works even when dependencies weren't pre-installed.
+  command = "npm ci --include=dev && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The app uses client-side routing (BrowserRouter), so deep links such as
+# /login or /f/:publicId must fall back to index.html instead of a 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
