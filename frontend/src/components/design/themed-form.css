@@ -1,0 +1,590 @@
+/* ============================================================
+   A saved theme, applied to the real form.
+
+   ThemedForm.jsx sets the same custom properties the design
+   preview uses; these rules push them onto the actual markup
+   the form is built from (the `pv-` field parts from
+   FieldPreview.jsx and the `pf-`/`bx-` chrome around them).
+
+   Everything is scoped under .tf, so a form without a theme is
+   left exactly as it was.
+   ============================================================ */
+
+.tf {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background-color: var(--t-bg);
+  font-family: var(--t-font);
+  font-size: var(--t-size);
+}
+
+/* A page background set to "Whole picture" is never cropped. */
+.tf-fit-contain .tf-media img,
+.tf-fit-contain .tf-media video {
+  object-fit: contain;
+}
+
+/* ---------- a page background on a form with no theme ---------- */
+
+/* The same split as a themed form, without the theme's colours. */
+.tf-bare {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background-color: var(--surface);
+}
+
+.tf-bare .tf-form {
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.tf-bare .tf-form::-webkit-scrollbar {
+  display: none;
+}
+
+.tf-bare .pf {
+  height: 100%;
+}
+
+/* Behind the questions, the page's own backing colours step aside so the
+   picture shows; the card that holds the questions stays readable. */
+.tf-bare.tf-lay-full .pf,
+.tf-bare.tf-lay-full .pw-stage,
+.tf-bare.tf-lay-full .fb-canvas-inner {
+  background-color: transparent;
+}
+
+.tf-bare.tf-lay-full .pf-card,
+.tf-bare.tf-lay-full .pw-frame {
+  background-color: color-mix(in srgb, var(--surface) 90%, transparent);
+}
+
+/* ---------- the logo, floating over the top-left corner ---------- */
+
+/* Over the picture, not above it: it takes no height of its own. */
+.tf-logo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  padding: clamp(0.75rem, 2.5vw, 1.25rem) clamp(1rem, 4vw, 2rem);
+  pointer-events: none;
+}
+
+.tf-strip-bottom .tf-logo {
+  top: auto;
+  bottom: 0;
+}
+
+.tf-logo img {
+  height: var(--t-logo);
+  max-width: 55%;
+  object-fit: contain;
+}
+
+/* ---------- picture and questions ---------- */
+
+.tf-split {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.tf-media {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.tf-media img,
+.tf-media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--t-media-focal);
+  filter: var(--t-media-filter);
+}
+
+.tf-media-veil {
+  position: absolute;
+  inset: 0;
+  background-color: var(--t-media-overlay);
+}
+
+.tf-lay-full .tf-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.tf-lay-left-half .tf-media,
+.tf-lay-right-half .tf-media {
+  flex-basis: 50%;
+}
+
+.tf-lay-left-tile .tf-media,
+.tf-lay-right-tile .tf-media {
+  flex-basis: 32%;
+}
+
+.tf-lay-right-half .tf-split,
+.tf-lay-right-tile .tf-split {
+  flex-direction: row-reverse;
+}
+
+.tf-lay-banner .tf-split {
+  flex-direction: column;
+}
+
+.tf-lay-bottom .tf-split {
+  flex-direction: column-reverse;
+}
+
+.tf-lay-banner .tf-media {
+  flex-basis: 34%;
+}
+
+.tf-lay-bottom .tf-media {
+  flex-basis: 28%;
+}
+
+/* Where the logo lands on the questions instead of the picture, the
+   column leaves room for it — at whichever end it sits. */
+.tf-strip-top.tf-lay-full .tf-form,
+.tf-strip-top.tf-lay-none .tf-form,
+.tf-strip-top.tf-lay-bottom .tf-form,
+.tf-strip-top.tf-lay-right-half .tf-form,
+.tf-strip-top.tf-lay-right-tile .tf-form {
+  padding-top: calc(var(--t-logo) + 0.9rem);
+}
+
+.tf-strip-bottom.tf-lay-full .tf-form,
+.tf-strip-bottom.tf-lay-none .tf-form,
+.tf-strip-bottom.tf-lay-bottom .tf-form,
+.tf-strip-bottom.tf-lay-right-half .tf-form,
+.tf-strip-bottom.tf-lay-right-tile .tf-form {
+  padding-bottom: calc(var(--t-logo) + 0.9rem);
+}
+
+.tf-form {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* On a narrow screen the picture never squeezes the questions out. */
+@media (max-width: 720px) {
+  .tf-split {
+    flex-direction: column;
+  }
+
+  .tf-lay-left-half .tf-media,
+  .tf-lay-right-half .tf-media,
+  .tf-lay-left-tile .tf-media,
+  .tf-lay-right-tile .tf-media {
+    flex-basis: 30%;
+  }
+}
+
+/* ---------- the form's own chrome ---------- */
+
+.tf .pf {
+  height: 100%;
+  background-color: transparent;
+}
+
+.tf .pf-top,
+.tf .pf-foot {
+  background-color: transparent;
+  border-color: var(--t-border-colour);
+}
+
+.tf .pf-name {
+  color: var(--t-title);
+  font-family: var(--t-font);
+}
+
+.tf .pf-count {
+  color: var(--t-help);
+}
+
+/* The name and count line follows the logo to the bottom. */
+.tf-strip-bottom .pf-top {
+  order: 3;
+  justify-content: flex-end;
+  border-top: 1px solid var(--t-border-colour);
+  border-bottom: 0;
+}
+
+.tf-strip-bottom .pf {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Either half of the line can be switched off in the theme. */
+.tf-no-name .pf-name {
+  visibility: hidden;
+}
+
+.tf-no-count .pf-count {
+  display: none;
+}
+
+/* With neither on, the line itself goes. */
+.tf-no-name.tf-no-count .pf-top {
+  display: none;
+}
+
+.tf .pf-card {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+/* ---------- the full-screen preview, wearing the same theme ---------- */
+
+.tf .pw-stage {
+  background-color: transparent;
+}
+
+.tf .pw-frame {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.tf .pw-foot {
+  background-color: transparent;
+  border-color: var(--t-border-colour);
+}
+
+/* ---------- the builder's canvas, wearing the same theme ---------- */
+
+.tf .fb-canvas-inner {
+  flex: 1 1 auto;
+  min-height: 0;
+  background-color: transparent;
+}
+
+/* The questions scroll inside the themed column, so the picture beside
+   them stays put. */
+.tf .tf-form {
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.tf .tf-form::-webkit-scrollbar {
+  display: none;
+}
+
+/* A themed canvas has no gutter outside the sheet, so the hover tools
+   tuck into the top-right corner of the question instead. */
+.tf .fb-slot-tools {
+  top: 0.35rem;
+  right: 0.35rem;
+  flex-direction: row;
+}
+
+.tf .fb-empty-title {
+  color: var(--t-question);
+}
+
+.tf .fb-empty-sub {
+  color: var(--t-help);
+}
+
+/* ---------- text size reaches every part of the form ---------- */
+
+/* The form's own stylesheet sets sizes in rem, which would ignore the
+   theme. Everything the person reads or types is re-stated here in `em`,
+   so one slider moves the lot. */
+.tf,
+.tf .pf-card,
+.tf .pw-frame,
+.tf .fb-canvas-inner {
+  font-size: var(--t-size);
+}
+
+.tf .pv-title,
+.tf .pv-statement {
+  font-size: 1.05em;
+}
+
+.tf .pv-screen-title {
+  font-size: 1.65em;
+}
+
+.tf .pv-screen-sub {
+  font-size: 0.95em;
+}
+
+.tf .pv-help,
+.tf .pv-group-tag,
+.tf .pv-scale-ends,
+.tf .pv-part-label,
+.tf .pv-rank-label,
+.tf .pv-pic-label,
+.tf .pv-req {
+  font-size: 0.82em;
+}
+
+.tf .pv-input,
+.tf .pv-field input,
+.tf .pv-field textarea,
+.tf .pv-field select,
+.tf .pv-line,
+.tf .pv-url,
+.tf .pv-sign,
+.tf .pv-pay-amount {
+  font-size: 0.95em;
+}
+
+.tf .pv-options label,
+.tf .pv-pics label,
+.tf .pv-slots label,
+.tf .pv-rank li,
+.tf .pv-matrix,
+.tf .pv-matrix th,
+.tf .pv-matrix td {
+  font-size: 0.95em;
+}
+
+.tf .pv-key {
+  font-size: 0.8em;
+}
+
+.tf .pv-rating,
+.tf .pv-scale {
+  font-size: 1.1em;
+}
+
+.tf .bx-publish,
+.tf .bx-ghost,
+.tf .pv-cta {
+  font-size: 0.95em;
+}
+
+.tf .pf-name {
+  font-size: 1em;
+}
+
+.tf .pf-count {
+  font-size: 0.85em;
+}
+
+/* ---------- questions ---------- */
+
+.tf .pv-title,
+.tf .pv-screen-title {
+  color: var(--t-question);
+  font-family: var(--t-font);
+  text-align: var(--t-align-question);
+}
+
+.tf .pv-screen-title {
+  color: var(--t-title);
+  text-align: var(--t-align-welcome);
+}
+
+.tf .pv-help,
+.tf .pv-screen-sub,
+.tf .pv-scale-ends,
+.tf .pv-part-label,
+.tf .pv-rank-label,
+.tf .pv-group-tag {
+  color: var(--t-help);
+}
+
+.tf .pv-screen-sub {
+  text-align: var(--t-align-welcome);
+}
+
+.tf .pv-statement {
+  color: var(--t-question);
+}
+
+/* ---------- answers ---------- */
+
+.tf .pv-input,
+.tf .pv-line,
+.tf .pv-field input,
+.tf .pv-field textarea,
+.tf .pv-field select {
+  background-color: var(--t-field-bg);
+  border: var(--t-border-width) var(--t-border-style) var(--t-border-colour);
+  border-radius: var(--t-radius);
+  box-shadow: var(--t-shadow);
+  color: var(--t-answer);
+  font-family: var(--t-font);
+  caret-color: var(--t-input);
+}
+
+.tf .pv-input:focus,
+.tf .pv-field input:focus,
+.tf .pv-field textarea:focus,
+.tf .pv-field select:focus {
+  outline: none;
+  border-color: var(--t-input);
+  box-shadow: 0 0 0 3px var(--t-input-soft);
+}
+
+.tf .pv-input::placeholder,
+.tf .pv-field input::placeholder,
+.tf .pv-field textarea::placeholder {
+  color: var(--t-answer);
+  opacity: 0.45;
+}
+
+.tf-fields-underline .pv-input,
+.tf-fields-underline .pv-field input,
+.tf-fields-underline .pv-field textarea,
+.tf-fields-underline .pv-field select {
+  padding-left: 0;
+  padding-right: 0;
+  background: none;
+  border-width: 0 0 var(--t-border-width) 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* choices, pictures, ranks — anything you pick rather than type */
+.tf .pv-options label,
+.tf .pv-pics label,
+.tf .pv-rank li,
+.tf .pv-slots label {
+  background-color: var(--t-field-bg);
+  border: var(--t-border-width) var(--t-border-style) var(--t-border-colour);
+  border-radius: var(--t-radius);
+  color: var(--t-answer);
+}
+
+.tf .pv-options label:hover,
+.tf .pv-pics label:hover {
+  border-color: var(--t-input);
+}
+
+.tf .pv-options input:checked + span,
+.tf .pv-options label:has(input:checked),
+.tf .pv-pics label:has(input:checked) {
+  background-color: var(--t-input-soft);
+  border-color: var(--t-input);
+}
+
+.tf .pv-key {
+  border-color: currentColor;
+  color: var(--t-answer);
+}
+
+.tf .pv-rating,
+.tf .pv-scale {
+  color: var(--t-input);
+}
+
+.tf .pv-req {
+  color: var(--t-input);
+}
+
+/* ---------- buttons ---------- */
+
+.tf .bx-publish,
+.tf .pv-cta {
+  background-color: var(--t-btn-bg);
+  border: 1.5px solid var(--t-btn-border);
+  border-radius: var(--t-btn-radius);
+  color: var(--t-btn-text);
+  font-family: var(--t-font);
+  font-weight: 650;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.tf-btnw-wide .bx-publish,
+.tf-btnw-wide .pv-cta {
+  padding-left: 2.8em;
+  padding-right: 2.8em;
+}
+
+.tf-btnw-full .bx-publish,
+.tf-btnw-full .pv-cta {
+  width: 100%;
+}
+
+/* Every hover repaints the button with its own colours; the movement on
+   top of that is what the Motion section picks. */
+.tf .bx-publish:hover,
+.tf .pv-cta:hover {
+  background-color: var(--t-btn-hover-bg);
+  border-color: var(--t-btn-hover-border);
+  color: var(--t-btn-hover-text);
+}
+
+.tf-hover-lift .bx-publish:hover,
+.tf-hover-lift .pv-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px var(--t-btn-glow);
+}
+
+.tf-hover-grow .bx-publish:hover,
+.tf-hover-grow .pv-cta:hover {
+  transform: scale(1.04);
+}
+
+.tf-hover-glow .bx-publish:hover,
+.tf-hover-glow .pv-cta:hover {
+  box-shadow: 0 0 0 4px var(--t-btn-glow);
+}
+
+.tf .bx-ghost {
+  background-color: transparent;
+  border-color: var(--t-border-colour);
+  border-radius: var(--t-btn-radius);
+  color: var(--t-help);
+}
+
+/* ---------- the entrance ---------- */
+
+.tf .pf-slot,
+.tf .pw-fields > * {
+  animation-duration: var(--t-motion);
+  animation-timing-function: cubic-bezier(0.22, 0.75, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+/* Each one waits a beat longer than the one before, in proportion to the
+   speed, so Slow reads as slow. */
+.tf .pf-slot:nth-child(2) { animation-delay: calc(1 * var(--t-stagger)); }
+.tf .pf-slot:nth-child(3) { animation-delay: calc(2 * var(--t-stagger)); }
+.tf .pf-slot:nth-child(4) { animation-delay: calc(3 * var(--t-stagger)); }
+.tf .pf-slot:nth-child(5) { animation-delay: calc(4 * var(--t-stagger)); }
+.tf .pf-slot:nth-child(n + 6) { animation-delay: calc(5 * var(--t-stagger)); }
+
+/* The keyframes themselves come from the animate.css package; the theme
+   names the one it wants in --t-anim ("none" plays nothing). */
+.tf .pf-slot,
+.tf .pw-fields > * {
+  animation-name: var(--t-anim, none);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tf * {
+    animation: none !important;
+  }
+}

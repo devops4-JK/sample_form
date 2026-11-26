@@ -1,0 +1,1457 @@
+/**
+ * The Workflow tab. Everything is prefixed .wf- so nothing here can reach
+ * the rest of the editor. Colours come from the app's tokens (--surface,
+ * --border, --red …) so light and dark mode both carry over; the route
+ * colours are fixed so a route's card and its lane on the map always match.
+ */
+
+.wf {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background-color: var(--bg);
+}
+
+.wf-state {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+  color: var(--muted);
+}
+
+/* ---------------- top strip ---------------- */
+
+.wf-top {
+  padding: 1.1rem 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--surface);
+}
+
+.wf-top-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+/* The five sections: underlined tabs with an icon and a count. */
+.wf-sections {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.9rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.wf-sections::-webkit-scrollbar {
+  display: none;
+}
+
+.wf-section {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 40px;
+  padding: 0 0.8rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wf-section:hover {
+  color: var(--text);
+}
+
+.wf-section.is-on {
+  color: var(--text);
+  border-bottom-color: var(--red);
+}
+
+.wf-section.is-on svg {
+  color: var(--red);
+}
+
+.wf-section-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: var(--text);
+}
+
+.wf-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.wf-sub {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.wf-top-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wf-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.wf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 26px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.wf-chip b {
+  color: var(--text);
+}
+
+.wf-chip.is-warn {
+  background-color: rgba(194, 65, 12, 0.08);
+  border-color: rgba(194, 65, 12, 0.3);
+  color: #c2410c;
+}
+
+.wf-chip.is-warn b {
+  color: #c2410c;
+}
+
+.wf-save {
+  font-size: 0.78rem;
+  color: var(--muted);
+  min-width: 52px;
+  text-align: right;
+}
+
+.wf-save.is-error {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.wf-error {
+  margin: 0.75rem 1.5rem 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  background-color: var(--red-soft);
+  color: var(--red);
+  font-size: 0.875rem;
+}
+
+/* ---------------- two columns ---------------- */
+
+.wf-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+}
+
+.wf-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background-color: var(--surface-alt);
+  /* faint dot grid, so the map reads as a canvas */
+  background-image: radial-gradient(color-mix(in srgb, var(--muted) 22%, transparent) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.wf-side-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.wf-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.wf-legend i {
+  display: inline-block;
+  width: 16px;
+  height: 0;
+  margin-left: 0.35rem;
+  border-top: 2px solid var(--border-strong);
+}
+
+.wf-legend .wf-legend-solid {
+  border-color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+.wf-legend .wf-legend-jump {
+  border-color: #2a6f97;
+}
+
+.wf-legend .wf-legend-else {
+  border-top-style: dashed;
+  border-color: #8a8a8a;
+}
+
+.wf-main {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* ---------------- the map ---------------- */
+
+.wf-map {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 0.5rem 1.5rem;
+}
+
+.wf-map-canvas {
+  position: relative;
+  margin: 0 auto;
+}
+
+.wf-map-svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.wf-spine {
+  stroke: color-mix(in srgb, var(--muted) 70%, transparent);
+  stroke-width: 2;
+}
+
+.wf-spine.is-unused {
+  stroke-dasharray: 2 5;
+  opacity: 0.45;
+}
+
+.wf-jump {
+  fill: none;
+  stroke-width: 1.7;
+  opacity: 0.42;
+  transition: opacity 0.15s ease, stroke-width 0.15s ease;
+}
+
+.wf-jump.is-strong {
+  stroke-width: 2.4;
+  opacity: 1;
+}
+
+.wf-start {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  background-color: var(--text);
+  color: var(--bg);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wf-node {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.75rem 0 0.6rem;
+  text-align: left;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.wf-node:hover {
+  border-color: var(--border-strong);
+}
+
+.wf-node.is-on {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-soft), 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.wf-node.is-lost {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
+.wf-node-num {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.wf-node.is-on .wf-node-num {
+  background-color: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.wf-node-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wf-node-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.wf-node-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.wf-node-lost {
+  font-style: normal;
+  color: #c2410c;
+}
+
+.wf-node-dots {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.wf-node-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.wf-node-dots b {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.wf-end {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1.5px dashed var(--border-strong);
+  background-color: var(--surface);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* ---------------- the editor ---------------- */
+
+.wf-editor {
+  max-width: 760px;
+}
+
+.wf-editor-head {
+  margin-bottom: 1.1rem;
+}
+
+.wf-editor-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.wf-editor-title {
+  margin: 0.15rem 0 0.25rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.wf-editor-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.wf-note {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.wf-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #c2410c;
+}
+
+/* A route card: a coloured rail down its left edge, matching its lane. */
+.wf-route {
+  position: relative;
+  margin-bottom: 0.85rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.wf-route::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background-color: var(--wf-c);
+}
+
+.wf-route-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem 0.6rem 1.15rem;
+  border-bottom: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--wf-c) 6%, var(--surface));
+}
+
+.wf-route-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--wf-c);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wf-route-tools {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 2px;
+}
+
+.wf-route-body {
+  padding: 0.85rem 0.9rem 0.9rem 1.15rem;
+}
+
+.wf-route-else .wf-route-tag {
+  color: var(--muted);
+}
+
+.wf-seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.wf-seg button {
+  height: 24px;
+  padding: 0 0.55rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.wf-seg button.is-on {
+  background-color: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.wf-cond {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.wf-cond-joiner {
+  flex: 0 0 48px;
+  padding-top: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wf-cond-fields {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 0.4rem;
+}
+
+.wf-input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.wf-input:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--red-soft);
+}
+
+.wf-input.is-empty {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.wf-input:disabled {
+  opacity: 0.55;
+}
+
+.wf-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-top: 3px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+}
+
+.wf-route-head .wf-icon {
+  margin-top: 0;
+  width: 28px;
+  height: 28px;
+}
+
+.wf-icon:hover:not(:disabled) {
+  background-color: var(--surface-alt);
+  color: var(--text);
+}
+
+.wf-icon-danger:hover:not(:disabled) {
+  color: var(--red);
+}
+
+.wf-icon:disabled {
+  opacity: 0.3;
+}
+
+.wf-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.1rem 0 0 56px;
+  padding: 0.2rem 0.3rem;
+  border: 0;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.wf-link:hover {
+  color: var(--red);
+}
+
+.wf-goto {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--wf-c) 8%, var(--surface-alt));
+}
+
+.wf-goto-label {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 74px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--wf-c);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wf-route-else .wf-goto-label {
+  color: var(--muted);
+}
+
+.wf-target {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+
+.wf-warn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: #c2410c;
+}
+
+.wf-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  height: 46px;
+  margin-bottom: 0.85rem;
+  border: 1.5px dashed var(--border);
+  border-radius: 14px;
+  background: none;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.wf-add:hover:not(:disabled) {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.wf-add:disabled {
+  opacity: 0.45;
+}
+
+.wf-hint {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* ---------------- one page only ---------------- */
+
+.wf-empty {
+  max-width: 440px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.wf-empty h3 {
+  margin: 1.25rem 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.wf-empty p {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.wf-empty-art {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.wf-empty-art i {
+  display: block;
+  width: 120px;
+  height: 22px;
+  border-radius: 7px;
+  border: 1.5px solid var(--border);
+  background-color: var(--surface);
+}
+
+.wf-empty-art i:nth-child(2) {
+  width: 90px;
+  margin-left: 60px;
+  border-color: var(--red);
+}
+
+/* ---------------- narrow screens: map above, routes below ---------------- */
+
+@media (max-width: 900px) {
+  .wf-pane {
+    padding: 1rem;
+  }
+
+  .wf-table .wf-tr {
+    grid-template-columns: 1fr 70px 1fr 34px;
+  }
+
+  .wf-body {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .wf-side {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    max-height: 46vh;
+  }
+
+  .wf-main {
+    overflow: visible;
+    padding: 1rem;
+  }
+
+  .wf-top {
+    padding: 1rem 1rem 0;
+  }
+
+  .wf-cond-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .wf-cond-joiner {
+    flex-basis: 40px;
+  }
+
+  .wf-link {
+    margin-left: 48px;
+  }
+}
+
+/* The tab's slot in the form editor: fills what is left under the header. */
+.wf-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wf-host > .wf {
+  flex: 1 1 auto;
+}
+
+
+/* ======================= the other four sections ======================= */
+
+.wf-pane {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.wf-col {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.wf-card {
+  margin-bottom: 1rem;
+  padding: 1.15rem 1.25rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.wf-card-soft {
+  background-color: var(--surface-alt);
+  box-shadow: none;
+}
+
+.wf-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.wf-card-head > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wf-card-head h3 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.wf-card-head p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.wf-card-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background-color: var(--red-soft);
+  color: var(--red);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.wf-mini-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.wf-uses {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.wf-uses li + li {
+  margin-top: 0.35rem;
+}
+
+.wf-uses b {
+  color: var(--text);
+}
+
+.wf-muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.wf-ok {
+  color: #e01e23;
+}
+
+.wf-bad {
+  color: var(--red);
+}
+
+.wf code {
+  overflow-wrap: anywhere;
+}
+
+.wf-card code,
+.wf-recall code,
+.wf-note code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-size: 0.8em;
+  color: var(--text);
+}
+
+.wf-badge {
+  margin-left: 0.35rem;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.wf-chip.is-on {
+  background-color: color-mix(in srgb, #4a7c59 10%, var(--surface));
+  border-color: color-mix(in srgb, #4a7c59 35%, var(--border));
+  color: #2f6b3f;
+}
+
+/* hidden-field keys */
+.wf-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.wf-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  height: 30px;
+  padding: 0 0.25rem 0 0.4rem;
+  border-radius: 8px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.wf-key code {
+  border: 0 !important;
+  background: none !important;
+  font-size: 0.85rem !important;
+}
+
+.wf-key button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+}
+
+.wf-key button:hover {
+  background-color: var(--red-soft);
+  color: var(--red);
+}
+
+.wf-inline-add {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.wf-inline-add .wf-input {
+  flex: 1 1 auto;
+}
+
+.wf-inline-add .fb-btn {
+  height: 36px;
+}
+
+.wf-input-auto {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.wf-input-sm {
+  width: 96px;
+  height: 32px;
+}
+
+.wf-linkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  background-color: var(--surface-alt);
+  border: 1px dashed var(--border);
+}
+
+.wf-linkbox code {
+  flex: 1 1 auto;
+  border: 0 !important;
+  background: none !important;
+  font-size: 0.82rem !important;
+}
+
+/* variables table */
+.wf-table {
+  margin-bottom: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wf-tr {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr 1fr 40px;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.wf-tr + .wf-tr {
+  border-top: 1px solid var(--border);
+}
+
+.wf-th {
+  min-height: 34px;
+  background-color: var(--surface-alt);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* points per answer */
+.wf-accordion {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wf-acc + .wf-acc {
+  border-top: 1px solid var(--border);
+}
+
+.wf-acc-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.4rem 0.85rem;
+  border: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+}
+
+.wf-acc-head:hover {
+  background-color: var(--surface-alt);
+}
+
+.wf-acc-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.wf-acc-title small {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.wf-acc-body {
+  padding: 0.4rem 0.85rem 0.85rem;
+  background-color: var(--surface-alt);
+}
+
+.wf-point {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.wf-point span {
+  flex: 1 1 auto;
+}
+
+.wf-point em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 0.8rem;
+  width: 44px;
+}
+
+.wf-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.875rem;
+}
+
+/* calculations */
+.wf-route-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.wf-route-sub .wf-input {
+  height: 30px;
+}
+
+.wf-calc {
+  flex-wrap: wrap;
+}
+
+.wf-calc .wf-input {
+  height: 34px;
+}
+
+.wf-calc > .wf-input:not(.wf-input-auto):not(.wf-input-sm) {
+  flex: 1 1 160px;
+}
+
+.wf-calc-word {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.wf-always {
+  padding-top: 0.45rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.wf-clist-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* endings */
+.wf-ending {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border);
+}
+
+.wf-ending label,
+.wf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.7rem;
+}
+
+.wf-ending label {
+  margin-bottom: 0;
+}
+
+.wf-ending label > span,
+.wf-field > span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.wf-textarea {
+  height: auto;
+  padding: 0.5rem 0.6rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.wf-recall {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* tags */
+.wf-tag {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.wf-tag-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.wf-tag-pill {
+  font-size: 1rem;
+}
+
+.wf-tag-name {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+
+/* automations */
+.wf-savebar {
+  position: sticky;
+  top: -1.5rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: -0.25rem 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  font-size: 0.875rem;
+}
+
+.wf-auto {
+  border-left: 4px solid var(--border);
+}
+
+.wf-auto.is-on {
+  border-left-color: #e01e23;
+}
+
+.wf-switch {
+  flex: 0 0 auto;
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--border);
+  transition: background-color 0.15s ease;
+}
+
+.wf-switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.wf-switch.is-on {
+  background-color: #e01e23;
+}
+
+.wf-switch.is-on i {
+  transform: translateX(20px);
+}
+
+.wf-secret {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.wf-secret code {
+  flex: 1 1 200px;
+  padding: 0.45rem 0.6rem !important;
+  font-size: 0.82rem !important;
+}
+
+.wf-field small {
+  line-height: 1.5;
+}
+
+.wf-auto-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.wf-log {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wf-log-row {
+  display: grid;
+  grid-template-columns: 12px 110px 150px 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+.wf-log-row + .wf-log-row {
+  border-top: 1px solid var(--border);
+}
+
+.wf-log-when {
+  color: var(--muted);
+}
+
+.wf-log-what {
+  font-weight: 600;
+}
+
+.wf-log-detail {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.wf-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.wf-dot.is-ok {
+  background-color: #e01e23;
+}
+
+.wf-dot.is-bad {
+  background-color: var(--red);
+}
+
+@media (max-width: 640px) {
+  .wf-log-row {
+    grid-template-columns: 12px 1fr;
+  }
+
+  .wf-log-row .wf-log-what,
+  .wf-log-row .wf-log-detail {
+    grid-column: 2;
+  }
+
+  .wf-card {
+    padding: 1rem;
+  }
+}
+
+/* ======================= Preview (components/builder/PreviewModal) ======================= */
+
+/* Test values for hidden fields, in the preview's top bar. */
+.pw-hidden {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.pw-hidden label {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.78rem;
+}
+
+.pw-hidden span {
+  padding: 0 0.45rem;
+  background-color: var(--surface-alt);
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+}
+
+.pw-hidden input {
+  width: 110px;
+  height: 100%;
+  padding: 0 0.45rem;
+  border: 0;
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* The ending reached in Preview, with the run's results for the designer. */
+.pw-ending {
+  text-align: center;
+}
+
+.pw-ending h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.pw-ending p {
+  white-space: pre-line;
+  opacity: 0.85;
+}
+
+.pw-ending dl {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  gap: 0.25rem 0.9rem;
+  margin: 1.25rem auto 0.75rem;
+  padding: 0.75rem 1rem;
+  max-width: 420px;
+  border: 1px dashed currentColor;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  text-align: left;
+  opacity: 0.85;
+}
+
+.pw-ending dt {
+  font-weight: 700;
+}
+
+.pw-ending dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.pw-ending small {
+  opacity: 0.65;
+}

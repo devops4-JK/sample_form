@@ -1,0 +1,767 @@
+/**
+ * Form validation — the Validation tab in the editor, and the gate that
+ * stands in front of a validated form.
+ *
+ * Two prefixes, so neither can reach anything else:
+ *   .vl-   the editor panel
+ *   .vg-   the gate and its error pages on the public link
+ *
+ * The panel borrows the app's own tokens (--surface, --border, --red) so it
+ * sits beside the Connect and Results tabs without looking bolted on. The
+ * gate deliberately does not: it is themed by whatever the form wears, and
+ * falls back to these neutrals when the form has no theme.
+ */
+
+/* ========================= the editor panel ========================= */
+
+/* Wider than the Connect and Results panels beside it: the three ways need
+   to stand side by side to be compared, and the list wants the room. */
+.cn.vl {
+  max-width: 1040px;
+}
+
+.vl {
+  padding-bottom: 2.5rem;
+}
+
+.vl-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+  color: var(--muted);
+}
+
+/* The way this form works right now, beside the heading. */
+.vl-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vl-note-bar {
+  margin-bottom: 1rem;
+  padding: 0.7rem 0.9rem;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+/* ---------------- the three ways ---------------- */
+
+.vl-ways {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(236px, 1fr));
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.vl-way {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.1rem 1.1rem 1rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+}
+
+.vl-way:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.vl-way.is-on {
+  border-color: var(--red);
+  box-shadow: 0 0 0 1px var(--red), 0 6px 18px rgba(224, 30, 35, 0.1);
+}
+
+.vl-way:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+/* The tick in the corner: the only thing that says "this is the one". */
+.vl-way-mark {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background-color: var(--surface);
+  color: #fff;
+  transition: background-color 0.14s ease, border-color 0.14s ease;
+}
+
+.vl-way.is-on .vl-way-mark {
+  background-color: var(--red);
+  border-color: var(--red);
+}
+
+.vl-way-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  background-color: var(--surface-alt);
+  border-radius: 10px;
+  color: var(--text);
+}
+
+.vl-way.is-on .vl-way-icon {
+  background-color: var(--red-soft);
+  color: var(--red);
+}
+
+.vl-way-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vl-way-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-right: 1.5rem;
+}
+
+.vl-way-blurb {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.vl-way-points {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+}
+
+.vl-way-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.78125rem;
+  line-height: 1.45;
+}
+
+.vl-way-point i {
+  flex: 0 0 auto;
+  width: 4px;
+  height: 4px;
+  margin-top: 0.5em;
+  background-color: currentColor;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+
+.vl-way-count {
+  margin-top: 0.15rem;
+  color: var(--red);
+  font-size: 0.78125rem;
+  font-weight: 650;
+}
+
+/* ---------------- cards ---------------- */
+
+.vl-card-title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.vl-quiet {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.vl-quiet-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  background-color: var(--surface-alt);
+  border-radius: 10px;
+  color: var(--muted);
+}
+
+.vl-paste {
+  margin-top: 0.75rem;
+  min-height: 8.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.vl-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* Breathing room between a card's note and the first box under it. */
+.vl .cn-card > .fb-field {
+  margin-top: 0.9rem;
+}
+
+.vl-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* ---------------- the tally strip ---------------- */
+
+.vl-tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.9rem 0;
+}
+
+.vl-tally-item {
+  padding: 0.35rem 0.7rem;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.vl-tally-item b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.vl-tally-done {
+  border-color: rgba(224, 30, 35, 0.35);
+}
+
+.vl-tally-done b {
+  color: #e01e23;
+}
+
+.vl-tally-open {
+  border-color: rgba(176, 116, 12, 0.35);
+}
+
+.vl-tally-open b {
+  color: #b0740c;
+}
+
+/* ---------------- find ---------------- */
+
+.vl-find {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.7rem;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+}
+
+.vl-find-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.5rem 0;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.vl-find-input:focus {
+  outline: none;
+}
+
+.vl-find-count {
+  flex: 0 0 auto;
+  font-size: 0.78125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- the list ---------------- */
+
+/* A fixed box with its own scrollbar: a list of 2,000 addresses must not
+   stretch the page, exactly as the forms grid does not. */
+.vl-table-wrap {
+  margin-top: 0.6rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.vl-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+
+.vl-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.6rem 0.8rem;
+  background-color: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vl-table tbody td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.vl-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.vl-table tbody tr:hover td {
+  background-color: var(--surface-alt);
+}
+
+.vl-table tbody tr.is-busy {
+  opacity: 0.5;
+}
+
+.vl-email {
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vl-when {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vl-no-match,
+.vl-empty {
+  padding: 1.25rem 0.8rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.vl-empty {
+  margin: 0.6rem 0 0;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+}
+
+/* ---------------- the status pill ---------------- */
+
+.vl-pill {
+  display: inline-block;
+  min-width: 2.6rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.78125rem;
+  font-weight: 650;
+  text-align: center;
+}
+
+.vl-pill-done {
+  background-color: rgba(224, 30, 35, 0.1);
+  border-color: rgba(224, 30, 35, 0.3);
+  color: #e01e23;
+}
+
+.vl-pill-opened {
+  background-color: rgba(176, 116, 12, 0.1);
+  border-color: rgba(176, 116, 12, 0.3);
+  color: #b0740c;
+}
+
+.vl-pill-waiting {
+  background-color: var(--surface-alt);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+/* ---------------- row buttons ---------------- */
+
+.vl-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.vl-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.vl-icon-btn:hover:not(:disabled) {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.vl-icon-danger:hover:not(:disabled) {
+  border-color: rgba(224, 30, 35, 0.3);
+  color: var(--red);
+}
+
+.vl-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---------------- the switch ---------------- */
+
+.vl-switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin: 1.1rem 0 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.vl-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.vl-switch-track {
+  flex: 0 0 auto;
+  position: relative;
+  width: 38px;
+  height: 22px;
+  margin-top: 0.1rem;
+  background-color: var(--border);
+  border-radius: 999px;
+  transition: background-color 0.16s ease;
+}
+
+.vl-switch-dot {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.16s ease;
+}
+
+.vl-switch input:checked + .vl-switch-track {
+  background-color: var(--red);
+}
+
+.vl-switch input:checked + .vl-switch-track .vl-switch-dot {
+  transform: translateX(16px);
+}
+
+.vl-switch input:focus-visible + .vl-switch-track {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+.vl-switch-words {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.875rem;
+}
+
+.vl-switch-words span {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* ========================= the public gate ========================= */
+
+/* Sized and coloured from the form's own theme when it has one, and from
+   the app's neutrals when it does not. */
+.vg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 1.5rem;
+  background-color: var(--t-bg, var(--bg, #fff));
+  color: var(--t-question, var(--text, #111));
+  font-family: var(--t-font, inherit);
+}
+
+.vg-card {
+  width: min(28rem, 100%);
+  padding: 2rem;
+  background-color: var(--t-bg, var(--surface, #fff));
+  border: 1px solid var(--t-border-colour, var(--border, #e4e4e4));
+  border-radius: var(--t-radius, 16px);
+  box-shadow: var(--t-shadow, 0 10px 40px rgba(0, 0, 0, 0.08));
+  text-align: center;
+}
+
+.vg-logo {
+  margin-bottom: 1.25rem;
+}
+
+.vg-logo img {
+  max-height: 56px;
+  max-width: 70%;
+  object-fit: contain;
+}
+
+.vg-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  background-color: var(--t-accent-soft, rgba(224, 30, 35, 0.08));
+  border-radius: 50%;
+  color: var(--t-accent, var(--red, #e01e23));
+}
+
+.vg-icon-stop {
+  background-color: rgba(224, 30, 35, 0.1);
+  color: #e01e23;
+}
+
+.vg-icon-done {
+  background-color: rgba(22, 135, 86, 0.1);
+  color: #168756;
+}
+
+.vg-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.3125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.vg-text {
+  margin: 0 0 1.4rem;
+  color: var(--t-help, var(--muted, #6b6b6b));
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.vg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.vg-label {
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.vg-input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background-color: var(--t-field-bg, #fff);
+  border: 1px solid var(--t-border-colour, var(--border, #e4e4e4));
+  border-radius: var(--t-radius, 10px);
+  color: inherit;
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+.vg-input:focus {
+  outline: none;
+  border-color: var(--t-accent, var(--red, #e01e23));
+  box-shadow: 0 0 0 3px var(--t-accent-soft, rgba(224, 30, 35, 0.14));
+}
+
+.vg-btn {
+  margin-top: 0.2rem;
+  padding: 0.7rem 1rem;
+  background-color: var(--t-btn-bg, var(--red, #e01e23));
+  border: 1px solid transparent;
+  border-radius: var(--t-btn-radius, 10px);
+  color: var(--t-btn-text, #fff);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  transition: filter 0.14s ease, opacity 0.14s ease;
+}
+
+.vg-btn:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.vg-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.vg-error {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  background-color: rgba(224, 30, 35, 0.08);
+  border: 1px solid rgba(224, 30, 35, 0.25);
+  border-radius: 8px;
+  color: #b8171b;
+  font-size: 0.8125rem;
+}
+
+.vg-foot {
+  margin: 1.25rem 0 0;
+  color: var(--t-help, var(--muted, #6b6b6b));
+  font-size: 0.78125rem;
+}
+
+.vg-again {
+  margin-top: 1.1rem;
+  padding: 0.55rem 1rem;
+  background: none;
+  border: 1px solid var(--t-border-colour, var(--border, #e4e4e4));
+  border-radius: var(--t-btn-radius, 10px);
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.vg-again:hover {
+  border-color: currentColor;
+}
+
+@media (max-width: 480px) {
+  .vg-card {
+    padding: 1.5rem 1.25rem;
+  }
+}
+/* ---------------- the list card folds away ---------------- */
+
+/* The whole heading is the button, so there is one obvious thing to press. */
+.vl-fold {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.vl-fold-words {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.vl-fold .cn-note {
+  margin: 0;
+}
+
+.vl-fold-arrow {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.vl-fold:hover .vl-fold-arrow {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.vl-fold.is-open .vl-fold-arrow {
+  transform: rotate(180deg);
+}
+
+.vl-fold:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.vl-fold + .vl-tally {
+  margin-top: 1rem;
+}
+
+/* ---------------- ten at a time ---------------- */
+
+/* Ten rows always fit, so the list no longer scrolls inside its own box. */
+.vl .vl-table-wrap {
+  max-height: none;
+}
+
+.vl-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.vl-pager-count {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}

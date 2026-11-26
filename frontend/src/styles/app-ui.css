@@ -1,0 +1,2008 @@
+/* ==========================================================================
+   App UI — the editing and application look.
+
+   Restyles the signed-in app and its pages: top bar, home, log in, forms
+   home, the form builder (pages, canvas chrome, settings), Add content,
+   Workflow, Validation, Connect, Results, Design studio and every dialog.
+
+   It does NOT restyle the form people fill in. Two guards keep it that way:
+
+     1. Every rule here is scoped to html[data-ui="app"]. Layout.jsx sets
+        that flag; the published form (/f/:publicId) sits outside Layout,
+        so on a live form none of this file applies.
+
+     2. Inside the app, the places that draw the form itself — the builder
+        canvas, the preview, the design canvas and theme thumbnails — get
+        the original colour tokens back (see "Form output keeps its look"),
+        so the form looks exactly as it does when published.
+
+   Loaded after builder.css and before form-modern.css (see main.jsx). The
+   html[data-ui] prefix also lifts these rules above the component
+   stylesheets that load later with their pages (design, workflow,
+   validation).
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ tokens */
+
+html[data-ui="app"] {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-alt: #f7f8fa;
+  --text: #101828;
+  --muted: #667085;
+  --border: #e4e7ec;
+  --border-strong: #98a2b3;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+
+  --ui-subtle: #f2f4f7;
+  --ui-hover: #f2f4f7;
+  --ui-faint: #98a2b3;
+  --ui-ring: 0 0 0 4px var(--red-soft);
+  --ui-sh-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --ui-sh-sm: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --ui-sh-md: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.04);
+  --ui-sh-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --ui-sh-xl: 0 24px 48px -12px rgba(16, 24, 40, 0.18);
+  --ui-r-sm: 8px;
+  --ui-r: 10px;
+  --ui-r-lg: 14px;
+  --ui-r-xl: 18px;
+  --ui-ease: cubic-bezier(0.2, 0, 0, 1);
+  --ui-glass: rgba(255, 255, 255, 0.82);
+  --ui-dots: rgba(16, 24, 40, 0.09);
+  --ui-success: #12b76a;
+  --ui-success-soft: rgba(18, 183, 106, 0.12);
+  --ui-warn: #f79009;
+  --ui-danger: #d92d20;
+  --ui-danger-soft: rgba(217, 45, 32, 0.1);
+}
+
+html[data-ui="app"][data-theme="dark"] {
+  --bg: #0b0c0f;
+  --surface: #14161b;
+  --surface-alt: #191c22;
+  --text: #f2f4f7;
+  --muted: #98a2b3;
+  --border: #262a33;
+  --border-strong: #475467;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  --ui-subtle: #1d2027;
+  --ui-hover: #1f232b;
+  --ui-faint: #667085;
+  --ui-sh-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ui-sh-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --ui-sh-md: 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --ui-sh-lg: 0 12px 16px -4px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --ui-sh-xl: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+  --ui-glass: rgba(20, 22, 27, 0.82);
+  --ui-dots: rgba(255, 255, 255, 0.07);
+}
+
+/* --------------------------------------------- form output keeps its look */
+/* The original tokens, given back wherever the form itself is drawn. */
+
+html[data-ui="app"] :is(.tf, .tf-bare, .pf, .pf-state, .pw-frame, .pw-stage,
+  .fb-canvas, .ds-canvas-sheet, .ds-canvas-split, .ds-tile-art) {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-alt: #fafafa;
+  --text: #111111;
+  --muted: #6b6b6b;
+  --border: #e4e4e4;
+  --border-strong: #111111;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+html[data-ui="app"][data-theme="dark"] :is(.tf, .tf-bare, .pf, .pf-state, .pw-frame,
+  .pw-stage, .fb-canvas, .ds-canvas-sheet, .ds-canvas-split, .ds-tile-art) {
+  --bg: #0f0f0f;
+  --surface: #161616;
+  --surface-alt: #1c1c1c;
+  --text: #f4f4f4;
+  --muted: #9a9a9a;
+  --border: #2a2a2a;
+  --border-strong: #f4f4f4;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* What the form would inherit from the page, given back too. Zero
+   specificity, so any rule the form sets for itself still wins. */
+:where(html[data-ui="app"]) :where(.tf, .tf-bare, .pf, .pf-state, .pw-frame, .pw-stage,
+  .fb-canvas, .ds-canvas-sheet, .ds-canvas-split, .ds-tile-art) {
+  color: var(--text);
+  letter-spacing: normal;
+  font-feature-settings: normal;
+}
+
+/* ------------------------------------------------------------------- base */
+
+html[data-ui="app"] body {
+  background-color: var(--bg);
+  font-feature-settings: "cv11", "ss01", "ss03";
+  letter-spacing: -0.006em;
+}
+
+html[data-ui="app"] ::selection {
+  background-color: var(--red-soft);
+}
+
+html[data-ui="app"] :is(button, a, input, select, textarea) {
+  transition-timing-function: var(--ui-ease);
+}
+
+/* Thin, quiet scrollbars across the app chrome. */
+html[data-ui="app"] :is(.fb-panel-body, .fb-scroll, .fx-side-scroll, .ac-list, .ac-rail, .wf-host *, .ds-body) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* ============================================================== app shell */
+
+html[data-ui="app"] .top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 0;
+  min-height: 64px;
+  background-color: var(--ui-glass);
+  border-bottom: 1px solid var(--border);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  backdrop-filter: saturate(180%) blur(12px);
+}
+
+html[data-ui="app"] .top-nav > .container-fluid {
+  min-height: 64px;
+}
+
+html[data-ui="app"] .brand-logo {
+  height: 22px;
+  width: auto;
+}
+
+html[data-ui="app"] .nav-actions {
+  gap: 0.5rem;
+}
+
+html[data-ui="app"] .icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+  color: var(--muted);
+  box-shadow: var(--ui-sh-xs);
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+html[data-ui="app"] .icon-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+html[data-ui="app"] .who-btn {
+  padding: 0.45rem 0.75rem;
+  background: none;
+  border: 0;
+  border-radius: var(--ui-r);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+html[data-ui="app"] .who-btn:hover {
+  background-color: var(--ui-hover);
+}
+
+/* Brand buttons (Log in, Create form, Log out). */
+html[data-ui="app"] .btn-brand,
+html[data-ui="app"] .btn-brand:focus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 38px;
+  padding: 0.5rem 1rem;
+  background-color: var(--red);
+  border: 1px solid var(--red);
+  border-radius: var(--ui-r);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--ui-sh-xs), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+html[data-ui="app"] .btn-brand:hover:not(:disabled) {
+  background-color: var(--red-dark);
+  border-color: var(--red-dark);
+  color: #fff;
+}
+
+html[data-ui="app"] .btn-brand:focus-visible {
+  box-shadow: var(--ui-ring);
+}
+
+html[data-ui="app"] .btn-brand:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+html[data-ui="app"] .btn-brand-lg {
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+html[data-ui="app"] .bottom-nav {
+  padding: 1.1rem 0;
+  background-color: transparent;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+html[data-ui="app"] .foot-link {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+html[data-ui="app"] .foot-link:hover {
+  color: var(--text);
+}
+
+/* ==================================================================== home */
+
+html[data-ui="app"] .home-hero {
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 4.5rem 1rem 5rem;
+  overflow: hidden;
+  text-align: center;
+  isolation: isolate;
+}
+
+/* A soft glow and a fading dot grid behind the headline. */
+html[data-ui="app"] .home-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(600px 300px at 50% 18%, var(--red-soft), transparent 70%),
+    radial-gradient(var(--ui-dots) 1px, transparent 1px) 0 0 / 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, #000 40%, transparent 100%);
+}
+
+html[data-ui="app"] .home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .home-eyebrow-tag {
+  padding: 0.1rem 0.5rem;
+  background-color: var(--red-soft);
+  border-radius: 999px;
+  color: var(--red);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+html[data-ui="app"] .home-title {
+  max-width: 760px;
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(2rem, 4.6vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+html[data-ui="app"] .home-title span {
+  color: var(--red);
+}
+
+html[data-ui="app"] .home-lead {
+  max-width: 560px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+html[data-ui="app"] .home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+html[data-ui="app"] .home-ghost {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--ui-sh-xs);
+  transition: border-color 0.15s;
+}
+
+html[data-ui="app"] .home-ghost:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+html[data-ui="app"] .home-points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  width: min(880px, 100%);
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+html[data-ui="app"] .home-point {
+  padding: 1.1rem 1.1rem 1.15rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+}
+
+html[data-ui="app"] .home-point-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 0.75rem;
+  background-color: var(--red-soft);
+  border-radius: 10px;
+  color: var(--red);
+}
+
+html[data-ui="app"] .home-point-title {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+
+html[data-ui="app"] .home-point-text {
+  display: block;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 767.98px) {
+  html[data-ui="app"] .home-points {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ================================================================== log in */
+
+html[data-ui="app"] .auth-wrap {
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  isolation: isolate;
+}
+
+html[data-ui="app"] .auth-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(520px 260px at 50% 22%, var(--red-soft), transparent 70%),
+    radial-gradient(var(--ui-dots) 1px, transparent 1px) 0 0 / 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 40%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(ellipse 60% 70% at 50% 40%, #000 35%, transparent 100%);
+}
+
+html[data-ui="app"] .auth-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 2.25rem 2rem 1.75rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r-xl);
+  box-shadow: var(--ui-sh-xl);
+}
+
+html[data-ui="app"] .auth-card::before {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 1.25rem;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='3' width='14' height='18' rx='2'/%3E%3Cpath d='M9 8h6M9 12h6M9 16h3'/%3E%3C/svg%3E")
+      center / 22px no-repeat,
+    var(--red);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px -4px var(--red-soft), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+html[data-ui="app"] .auth-title {
+  margin: 0 0 0.35rem;
+  color: var(--text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+html[data-ui="app"] .auth-subtitle {
+  margin-bottom: 1.5rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+html[data-ui="app"] .auth-card .form-label {
+  margin-bottom: 0.4rem;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+html[data-ui="app"] .auth-card .form-control {
+  height: 44px;
+  padding: 0 0.85rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+  color: var(--text);
+  font-size: 0.9375rem;
+  box-shadow: var(--ui-sh-xs);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+html[data-ui="app"] .auth-card .form-control::placeholder {
+  color: var(--ui-faint);
+}
+
+html[data-ui="app"] .auth-card .form-control:focus {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring);
+}
+
+html[data-ui="app"] .auth-card .btn-brand {
+  min-height: 44px;
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+html[data-ui="app"] .auth-foot {
+  margin: 1.5rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+html[data-ui="app"] .text-link {
+  color: var(--red);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+html[data-ui="app"] .text-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ============================================================ forms home */
+
+html[data-ui="app"] .fx {
+  background-color: var(--bg);
+}
+
+html[data-ui="app"] .fx-topbar {
+  height: 60px;
+  padding: 0 1.25rem;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-ui="app"] .fx-body {
+  grid-template-columns: 264px minmax(0, 1fr);
+}
+
+html[data-ui="app"] .fx-side {
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+html[data-ui="app"] .fx-side-label {
+  color: var(--ui-faint);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-ui="app"] .fx-nav-item,
+html[data-ui="app"] .fx-nav button,
+html[data-ui="app"] .fx-nav a {
+  border-radius: var(--ui-r-sm);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+html[data-ui="app"] .fx-nav-item:hover,
+html[data-ui="app"] .fx-nav button:hover,
+html[data-ui="app"] .fx-nav a:hover {
+  background-color: var(--ui-hover);
+}
+
+html[data-ui="app"] .fx-nav .is-on,
+html[data-ui="app"] .fx-nav-item.is-on {
+  background-color: var(--red-soft);
+  color: var(--red);
+  font-weight: 600;
+}
+
+html[data-ui="app"] .fx-nav .is-on .fx-count {
+  background-color: var(--surface);
+  color: var(--red);
+}
+
+html[data-ui="app"] .fx-count,
+html[data-ui="app"] .fx-move-count,
+html[data-ui="app"] .fx-more-count {
+  padding: 0.05rem 0.45rem;
+  background-color: var(--ui-subtle);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-ui="app"] .fx-main {
+  padding: 1.75rem 2rem 0;
+}
+
+html[data-ui="app"] .fx-title {
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+html[data-ui="app"] .fx-usage-bar {
+  height: 6px;
+  background-color: var(--ui-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+html[data-ui="app"] .fx-usage-text,
+html[data-ui="app"] .fx-meta,
+html[data-ui="app"] .fx-sub {
+  color: var(--muted);
+}
+
+/* Buttons. */
+html[data-ui="app"] .fx-btn {
+  height: 38px;
+  padding: 0 0.9rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--ui-sh-xs);
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+
+html[data-ui="app"] .fx-btn:hover:not(:disabled) {
+  background-color: var(--surface-alt);
+  border-color: var(--border-strong);
+}
+
+html[data-ui="app"] .fx-btn-primary,
+html[data-ui="app"] .fx-btn-primary:hover:not(:disabled) {
+  background-color: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  box-shadow: var(--ui-sh-xs), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+html[data-ui="app"] .fx-btn-primary:hover:not(:disabled) {
+  background-color: var(--red-dark);
+  border-color: var(--red-dark);
+}
+
+html[data-ui="app"] .fx-icon-btn {
+  border-radius: var(--ui-r-sm);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+html[data-ui="app"] .fx-icon-btn:hover {
+  background-color: var(--ui-hover);
+  color: var(--text);
+}
+
+html[data-ui="app"] .fx-search {
+  height: 38px;
+  background-color: var(--surface);
+  border-radius: var(--ui-r);
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .fx-search:focus-within,
+html[data-ui="app"] .fx-input:focus {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring);
+}
+
+html[data-ui="app"] .fx-input {
+  height: 40px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .fx-segment {
+  padding: 3px;
+  background-color: var(--ui-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+}
+
+html[data-ui="app"] .fx-segment button {
+  border-radius: 7px;
+}
+
+html[data-ui="app"] .fx-segment button.is-on {
+  background-color: var(--surface);
+  box-shadow: var(--ui-sh-sm);
+}
+
+/* The panel the cards and the table sit in: open, not boxed. */
+html[data-ui="app"] .fx-panel {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+html[data-ui="app"] .fx-grid {
+  gap: 1rem;
+  padding: 2px 2px 1.5rem;
+}
+
+html[data-ui="app"] .fx-card {
+  padding: 1.1rem 1.1rem 0.95rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+  transition: border-color 0.2s var(--ui-ease), box-shadow 0.2s var(--ui-ease),
+    transform 0.2s var(--ui-ease);
+}
+
+html[data-ui="app"] .fx-card:hover {
+  border-color: var(--border);
+  box-shadow: var(--ui-sh-lg);
+  transform: translateY(-2px);
+}
+
+html[data-ui="app"] .fx-card.is-focused {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring), var(--ui-sh-md);
+}
+
+html[data-ui="app"] .fx-card-stripe {
+  height: 3px;
+  opacity: 0.9;
+}
+
+html[data-ui="app"] .fx-tile {
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .fx-card-name {
+  font-size: 0.975rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+html[data-ui="app"] .fx-card-facts {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border);
+}
+
+html[data-ui="app"] .fx-card-open {
+  height: 36px;
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+  color: var(--text);
+  font-weight: 600;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+html[data-ui="app"] .fx-card-open:hover {
+  background-color: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+/* List view. */
+html[data-ui="app"] .fx-panel:has(.fx-thead) {
+  overflow: hidden;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+}
+
+html[data-ui="app"] .fx-thead {
+  background-color: var(--surface-alt);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+html[data-ui="app"] .fx-tbody .fx-tr {
+  transition: background-color 0.12s;
+}
+
+html[data-ui="app"] .fx-tbody .fx-tr:hover {
+  background-color: var(--surface-alt);
+}
+
+/* Empty state. */
+html[data-ui="app"] .fx-empty {
+  padding: 3rem 1.5rem;
+  background-color: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-color: color-mix(in srgb, var(--border-strong) 45%, transparent);
+  border-radius: var(--ui-r-lg);
+}
+
+html[data-ui="app"] .fx-empty-icon {
+  background-color: var(--red-soft);
+  color: var(--red);
+  border-radius: 14px;
+}
+
+/* Menus (forms home, profile). */
+html[data-ui="app"] .fx-menu,
+html[data-ui="app"] .dropdown-menu {
+  padding: 0.35rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-lg);
+}
+
+html[data-ui="app"] .dropdown-item {
+  border-radius: var(--ui-r-sm);
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+html[data-ui="app"] .dropdown-item:hover,
+html[data-ui="app"] .dropdown-item:focus {
+  background-color: var(--ui-hover);
+  color: var(--text);
+}
+
+html[data-ui="app"] .dropdown-item.fx-danger,
+html[data-ui="app"] .fx-danger {
+  color: var(--ui-danger);
+}
+
+html[data-ui="app"] .dropdown-divider {
+  margin: 0.35rem 0;
+  border-color: var(--border);
+}
+
+html[data-ui="app"] .fx-avatar {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--border);
+}
+
+/* Dialogs on the forms home. */
+html[data-ui="app"] .fx-dialog-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+html[data-ui="app"] .fx-dialog-desc {
+  color: var(--muted);
+}
+
+/* ================================================================ builder */
+
+html[data-ui="app"] .fb {
+  --fb-radius: var(--ui-r);
+  --fb-canvas-bg: var(--bg);
+  background-color: var(--bg);
+}
+
+/* ---------- header ---------- */
+
+html[data-ui="app"] .fb-top {
+  height: 60px;
+  padding: 0 1rem 0 0.75rem;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--ui-sh-xs);
+  position: relative;
+  z-index: 3;
+}
+
+html[data-ui="app"] .fb-top-left > .fb-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .fb-crumb {
+  gap: 0.25rem;
+  margin-left: 0.35rem;
+  font-size: 0.875rem;
+}
+
+html[data-ui="app"] .fb-crumb-link {
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+html[data-ui="app"] .fb-crumb-link:hover {
+  background-color: var(--ui-hover);
+  color: var(--text);
+}
+
+html[data-ui="app"] .fb-crumb-sep {
+  color: var(--ui-faint);
+  opacity: 1;
+}
+
+html[data-ui="app"] .fb-crumb-name {
+  padding: 0.3rem 0.55rem;
+  border-radius: var(--ui-r-sm);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+html[data-ui="app"] .fb-crumb-name:hover {
+  background-color: var(--ui-hover);
+  border-color: transparent;
+}
+
+/* Section tabs: a segmented control. */
+html[data-ui="app"] .fb-tabs {
+  gap: 2px;
+  padding: 4px;
+  background-color: var(--ui-subtle);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+html[data-ui="app"] .fb-tab {
+  position: relative;
+  height: 32px;
+  padding: 0 1rem;
+  border-radius: var(--ui-r-sm);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+
+html[data-ui="app"] .fb-tab:hover {
+  color: var(--text);
+  background-color: color-mix(in srgb, var(--surface) 55%, transparent);
+}
+
+html[data-ui="app"] .fb-tab.is-on {
+  background-color: var(--surface);
+  box-shadow: var(--ui-sh-sm), 0 0 0 1px var(--border);
+  color: var(--text);
+}
+
+/* Save status as a quiet pill. */
+html[data-ui="app"] .fb-save {
+  height: 28px;
+  margin-right: 0.25rem;
+  padding: 0 0.65rem;
+  background-color: var(--ui-subtle);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+html[data-ui="app"] .fb-save-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--ui-success);
+  box-shadow: 0 0 0 3px var(--ui-success-soft);
+}
+
+html[data-ui="app"] .fb-save.is-saving .fb-save-dot {
+  background-color: var(--ui-warn);
+  box-shadow: 0 0 0 3px rgba(247, 144, 9, 0.15);
+}
+
+html[data-ui="app"] .fb-save.is-error {
+  background-color: var(--ui-danger-soft);
+  color: var(--ui-danger);
+}
+
+html[data-ui="app"] .fb-save.is-error .fb-save-dot {
+  background-color: var(--ui-danger);
+  box-shadow: none;
+}
+
+html[data-ui="app"] .fb-alert {
+  border-radius: var(--ui-r);
+  font-weight: 500;
+}
+
+html[data-ui="app"] .fb-alert-bar {
+  border-radius: 0;
+}
+
+/* ---------- buttons ---------- */
+
+html[data-ui="app"] .fb-btn {
+  height: 36px;
+  padding: 0 0.85rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-shadow: var(--ui-sh-xs);
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+html[data-ui="app"] .fb-btn:hover:not(:disabled) {
+  background-color: var(--surface-alt);
+  border-color: var(--border-strong);
+}
+
+html[data-ui="app"] .fb-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+html[data-ui="app"] .fb-btn-sm {
+  height: 30px;
+  padding: 0 0.6rem;
+  border-radius: var(--ui-r-sm);
+  font-size: 0.75rem;
+}
+
+html[data-ui="app"] .fb-btn-primary {
+  background-color: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  box-shadow: var(--ui-sh-xs), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+html[data-ui="app"] .fb-btn-primary:hover:not(:disabled) {
+  background-color: var(--red-dark);
+  border-color: var(--red-dark);
+  color: #fff;
+}
+
+html[data-ui="app"] .fb-btn-danger {
+  background-color: var(--ui-danger);
+  border-color: var(--ui-danger);
+  color: #fff;
+}
+
+html[data-ui="app"] .fb-btn-danger:hover:not(:disabled) {
+  background-color: #b42318;
+  border-color: #b42318;
+  color: #fff;
+}
+
+html[data-ui="app"] .fb-btn-ghost-danger {
+  color: var(--ui-danger);
+}
+
+html[data-ui="app"] .fb-btn-ghost-danger:hover:not(:disabled) {
+  background-color: var(--ui-danger-soft);
+  border-color: color-mix(in srgb, var(--ui-danger) 40%, transparent);
+  color: var(--ui-danger);
+}
+
+html[data-ui="app"] .fb-btn-live {
+  background-color: var(--ui-success-soft);
+  border-color: color-mix(in srgb, var(--ui-success) 35%, transparent);
+  color: #067647;
+}
+
+html[data-ui="app"][data-theme="dark"] .fb-btn-live {
+  color: #47cd89;
+}
+
+html[data-ui="app"] .fb-btn-live:hover:not(:disabled) {
+  background-color: var(--ui-success-soft);
+  border-color: var(--ui-success);
+  color: inherit;
+}
+
+html[data-ui="app"] .fb-live-dot {
+  width: 7px;
+  height: 7px;
+  background-color: var(--ui-success);
+  box-shadow: 0 0 0 3px var(--ui-success-soft);
+  animation: ui-live 2s ease-in-out infinite;
+}
+
+@keyframes ui-live {
+  50% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+
+html[data-ui="app"] .fb-icon {
+  border-radius: var(--ui-r-sm);
+  color: var(--muted);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+html[data-ui="app"] .fb-icon:hover:not(:disabled) {
+  background-color: var(--ui-hover);
+  color: var(--text);
+}
+
+html[data-ui="app"] .fb-icon-danger:hover:not(:disabled) {
+  background-color: var(--ui-danger-soft);
+  color: var(--ui-danger);
+}
+
+/* ---------- inputs ---------- */
+
+html[data-ui="app"] .fb-label {
+  margin-bottom: 0.4rem;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+html[data-ui="app"] .fb-hint {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+html[data-ui="app"] .fb-input {
+  height: 38px;
+  padding: 0 0.75rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r-sm);
+  color: var(--text);
+  font-size: 0.875rem;
+  box-shadow: var(--ui-sh-xs);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+html[data-ui="app"] .fb-input:hover:not(:focus):not(:disabled) {
+  border-color: color-mix(in srgb, var(--border-strong) 60%, var(--border));
+}
+
+html[data-ui="app"] .fb-input::placeholder {
+  color: var(--ui-faint);
+  opacity: 1;
+}
+
+html[data-ui="app"] .fb-input:focus {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring);
+}
+
+html[data-ui="app"] .fb-input-sm {
+  height: 32px;
+}
+
+html[data-ui="app"] .fb-textarea {
+  height: auto;
+  min-height: 72px;
+  padding: 0.6rem 0.75rem;
+}
+
+html[data-ui="app"] select.fb-input {
+  appearance: none;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398a2b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 0.6rem center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+}
+
+html[data-ui="app"] .fb-seg {
+  padding: 3px;
+  background-color: var(--ui-subtle);
+  border-radius: var(--ui-r);
+}
+
+html[data-ui="app"] .fb-seg button {
+  border-radius: 7px;
+  font-weight: 500;
+}
+
+html[data-ui="app"] .fb-seg button.is-on {
+  box-shadow: var(--ui-sh-sm);
+  font-weight: 600;
+}
+
+/* Switches: a cleaner, rounder track. */
+html[data-ui="app"] .fb-switch .form-check-input,
+html[data-ui="app"] .form-switch .form-check-input {
+  width: 2.25em;
+  height: 1.25em;
+  background-color: var(--border);
+  border-color: transparent;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+  box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.12);
+  transition: background-color 0.2s, background-position 0.2s;
+}
+
+html[data-ui="app"] .fb-switch .form-check-input:checked,
+html[data-ui="app"] .form-switch .form-check-input:checked {
+  background-color: var(--red);
+  border-color: var(--red);
+}
+
+html[data-ui="app"] .fb-switch .form-check-input:focus,
+html[data-ui="app"] .form-switch .form-check-input:focus {
+  border-color: transparent;
+  box-shadow: var(--ui-ring);
+}
+
+html[data-ui="app"] .fb-switch .form-check-label {
+  font-weight: 500;
+}
+
+/* ---------- panels ---------- */
+
+html[data-ui="app"] .fb-body {
+  grid-template-columns: 280px minmax(0, 1fr) 336px;
+}
+
+html[data-ui="app"] .fb-panel {
+  background-color: var(--surface);
+}
+
+html[data-ui="app"] .fb-panel-left {
+  border-right: 1px solid var(--border);
+}
+
+html[data-ui="app"] .fb-panel-right {
+  border-left: 1px solid var(--border);
+}
+
+html[data-ui="app"] .fb-panel-head {
+  min-height: 56px;
+  padding: 0.6rem 0.75rem 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-ui="app"] .fb-panel-title {
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+html[data-ui="app"] .fb-panel-sub {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+html[data-ui="app"] .fb-panel-head .bx-tile {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+
+/* Settings sections read as grouped blocks. */
+html[data-ui="app"] .fb-sec {
+  padding: 1.1rem 1rem 1.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-ui="app"] .fb-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.85rem;
+  color: var(--ui-faint);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+html[data-ui="app"] .fb-sec-title::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background-color: var(--border);
+}
+
+html[data-ui="app"] .fb-part,
+html[data-ui="app"] .fb-prod,
+html[data-ui="app"] .fb-set {
+  background-color: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+}
+
+html[data-ui="app"] .fb-list-n {
+  color: var(--ui-faint);
+  font-weight: 600;
+}
+
+html[data-ui="app"] .fb-add-row {
+  margin-top: 0.6rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--ui-r-sm);
+  font-weight: 600;
+}
+
+/* ---------- pages list ---------- */
+
+html[data-ui="app"] .fb-pages {
+  padding: 0.75rem 0.65rem;
+}
+
+html[data-ui="app"] .fb-pg {
+  padding: 0.3rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+html[data-ui="app"] .fb-pg + .fb-pg {
+  margin-top: 0.3rem;
+}
+
+html[data-ui="app"] .fb-pg.is-on {
+  background-color: var(--surface-alt);
+  border-color: var(--border);
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .fb-pg-select {
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--ui-r-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+html[data-ui="app"] .fb-pg-select:hover {
+  background-color: var(--ui-hover);
+}
+
+html[data-ui="app"] .fb-pg-num {
+  width: 22px;
+  height: 22px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .fb-pg.is-on .fb-pg-num {
+  background-color: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+html[data-ui="app"] .fb-pg-count {
+  min-width: 22px;
+  padding: 0.05rem 0.4rem;
+  background-color: var(--ui-subtle);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+html[data-ui="app"] .fb-pg.is-on .fb-pg-count {
+  background-color: var(--surface);
+}
+
+html[data-ui="app"] .fb-items {
+  margin: 0.25rem 0 0;
+  padding: 0 0 0 0.35rem;
+}
+
+html[data-ui="app"] .fb-item {
+  border-radius: var(--ui-r-sm);
+  transition: background-color 0.12s;
+}
+
+html[data-ui="app"] .fb-item + .fb-item {
+  margin-top: 2px;
+}
+
+html[data-ui="app"] .fb-item-select {
+  padding: 0.4rem 0.4rem 0.4rem 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+html[data-ui="app"] .fb-item:hover {
+  background-color: var(--surface);
+}
+
+html[data-ui="app"] .fb-item.is-on {
+  background-color: var(--surface);
+  box-shadow: 0 0 0 1px var(--red), var(--ui-sh-sm);
+}
+
+html[data-ui="app"] .fb-item .bx-tile {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+html[data-ui="app"] .fb-item-letter {
+  color: var(--ui-faint);
+}
+
+html[data-ui="app"] .fb-add-inline {
+  margin-top: 0.4rem;
+  padding: 0.55rem;
+  background-color: var(--surface);
+  border: 1px dashed color-mix(in srgb, var(--border-strong) 55%, transparent);
+  border-radius: var(--ui-r);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+html[data-ui="app"] .fb-add-inline:hover {
+  border-style: solid;
+  border-color: var(--red);
+  background-color: var(--red-soft);
+  color: var(--red);
+}
+
+/* ---------- canvas chrome ---------- */
+
+html[data-ui="app"] .fb-stage {
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--ui-dots) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+html[data-ui="app"] .fb-toolbar {
+  min-height: 56px;
+  padding: 0.55rem 1.25rem;
+  background-color: var(--ui-glass);
+  border-bottom: 1px solid var(--border);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
+  backdrop-filter: saturate(180%) blur(10px);
+}
+
+html[data-ui="app"] .fb-toolbar-page {
+  padding: 0.15rem 0.55rem;
+  background-color: var(--ui-subtle);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+html[data-ui="app"] .fb-toolbar-info {
+  align-items: center;
+}
+
+html[data-ui="app"] .fb-toolbar-name {
+  font-size: 0.9375rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+html[data-ui="app"] .fb-canvas-wrap {
+  padding: 1.75rem;
+}
+
+/* The sheet the form sits on: only its frame changes, never the form. */
+html[data-ui="app"] .fb-canvas {
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--border), var(--ui-sh-xl);
+}
+
+/* Selection on the canvas: an outline and a floating tool pill. */
+html[data-ui="app"] .fb-slot {
+  border-radius: 14px;
+  transition: box-shadow 0.15s var(--ui-ease), background-color 0.15s;
+}
+
+html[data-ui="app"] .fb-slot:hover {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--red) 35%, transparent);
+}
+
+html[data-ui="app"] .fb-slot.is-on {
+  box-shadow: 0 0 0 2px var(--red), 0 0 0 6px var(--red-soft);
+}
+
+html[data-ui="app"] .fb-slot-tools {
+  padding: 3px;
+  background-color: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px -2px rgba(16, 24, 40, 0.16);
+}
+
+html[data-ui="app"] .fb-slot-tools .fb-icon {
+  color: #475467;
+}
+
+html[data-ui="app"] .fb-slot-tools .fb-icon:hover:not(:disabled) {
+  background-color: #f2f4f7;
+  color: #101828;
+}
+
+html[data-ui="app"] .fb-slot-tools .fb-icon-danger:hover:not(:disabled) {
+  background-color: #fef3f2;
+  color: #d92d20;
+}
+
+html[data-ui="app"] .fb-empty-icon {
+  width: 52px;
+  height: 52px;
+  background-color: var(--red-soft);
+  border: 0;
+  border-radius: 14px;
+  color: var(--red);
+}
+
+/* ---------- full-width tabs (Validation, Connect, Results) ---------- */
+
+html[data-ui="app"] .fb-scroll {
+  background-color: var(--bg);
+}
+
+/* Results. */
+html[data-ui="app"] .rs-stat {
+  position: relative;
+  padding: 1.1rem 1.2rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+}
+
+html[data-ui="app"] .rs-n {
+  font-size: 1.75rem;
+  letter-spacing: -0.03em;
+}
+
+html[data-ui="app"] .rs-l {
+  font-weight: 500;
+}
+
+html[data-ui="app"] .rs-table th {
+  background-color: var(--surface-alt);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+html[data-ui="app"] .rs-table tbody tr {
+  transition: background-color 0.12s;
+}
+
+html[data-ui="app"] .rs-table tbody tr:hover {
+  background-color: var(--surface-alt);
+}
+
+/* ============================================================ Add content */
+
+html[data-ui="app"] .ac {
+  overflow: hidden;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r-xl);
+  box-shadow: var(--ui-sh-xl);
+}
+
+html[data-ui="app"] .ac-head {
+  padding: 1.35rem 1.25rem 0 1.5rem;
+}
+
+html[data-ui="app"] .ac-title {
+  font-size: 1.1875rem;
+  letter-spacing: -0.02em;
+}
+
+html[data-ui="app"] .ac-search {
+  height: 46px;
+  margin: 1rem 1.5rem 1.15rem;
+  background-color: var(--surface-alt);
+  border-radius: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+html[data-ui="app"] .ac-search:focus-within {
+  background-color: var(--surface);
+  border-color: var(--red);
+  box-shadow: var(--ui-ring);
+}
+
+html[data-ui="app"] .ac-rail {
+  gap: 2px;
+  padding: 0.85rem 0.75rem;
+  background-color: var(--surface-alt);
+}
+
+html[data-ui="app"] .ac-cat {
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--ui-r-sm);
+  font-weight: 500;
+  transition: background-color 0.12s;
+}
+
+html[data-ui="app"] .ac-cat:hover:not(:disabled) {
+  background-color: var(--ui-hover);
+}
+
+html[data-ui="app"] .ac-cat.is-on {
+  background-color: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--ui-sh-sm);
+  font-weight: 650;
+}
+
+html[data-ui="app"] .ac-cat-count {
+  padding: 0 0.4rem;
+  background-color: var(--ui-subtle);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+html[data-ui="app"] .ac-cat.is-on .ac-cat-count {
+  background-color: var(--red-soft);
+  color: var(--red);
+}
+
+html[data-ui="app"] .ac-list {
+  padding: 1.15rem 1.5rem 1.5rem;
+}
+
+html[data-ui="app"] .ac-sec + .ac-sec {
+  margin-top: 1.6rem;
+}
+
+html[data-ui="app"] .ac-sec-title {
+  margin-bottom: 0.7rem;
+  color: var(--ui-faint);
+  font-size: 0.6875rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+html[data-ui="app"] .ac-grid {
+  gap: 0.6rem;
+}
+
+html[data-ui="app"] .ac-card {
+  padding: 0.75rem 0.8rem;
+  border-radius: 12px;
+  box-shadow: var(--ui-sh-xs);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s var(--ui-ease);
+}
+
+html[data-ui="app"] .ac-card:hover {
+  border-color: color-mix(in srgb, var(--red) 55%, var(--border));
+  box-shadow: var(--ui-sh-md);
+  transform: translateY(-1px);
+}
+
+html[data-ui="app"] .ac-card.is-best {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring);
+}
+
+html[data-ui="app"] .ac-card .bx-tile {
+  border-radius: 10px;
+}
+
+html[data-ui="app"] .ac-enter {
+  border-radius: 6px;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+/* ================================================================ dialogs */
+
+html[data-ui="app"] .modal-backdrop.show,
+html[data-ui="app"] .cf-backdrop.show {
+  background-color: #0c111d;
+  opacity: 0.55;
+}
+
+html[data-ui="app"] .cf {
+  border-radius: var(--ui-r-xl);
+  box-shadow: var(--ui-sh-xl);
+}
+
+html[data-ui="app"] .cf-body {
+  padding: 1.75rem 1.5rem 1.35rem;
+}
+
+html[data-ui="app"] .cf-icon {
+  width: 48px;
+  height: 48px;
+  background-color: var(--ui-danger-soft);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--ui-danger-soft) 45%, transparent);
+  color: var(--ui-danger);
+}
+
+html[data-ui="app"] .cf-title {
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
+}
+
+html[data-ui="app"] .cf-foot {
+  padding: 1rem 1.25rem;
+  background-color: var(--surface);
+}
+
+html[data-ui="app"] .cf-foot .fb-btn {
+  height: 40px;
+}
+
+/* Preview modal chrome (the frame inside stays the form's own). */
+html[data-ui="app"] .pw-bar {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-ui="app"] .pw-devices {
+  padding: 3px;
+  background-color: var(--ui-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--ui-r);
+}
+
+/* =============================================================== workflow */
+
+html[data-ui="app"] .wf-top {
+  padding: 1.25rem 1.5rem 0;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-ui="app"] .wf-title {
+  font-size: 1.375rem;
+  letter-spacing: -0.03em;
+}
+
+html[data-ui="app"] .wf-sections {
+  gap: 0.15rem;
+  margin-top: 1rem;
+}
+
+html[data-ui="app"] .wf-section {
+  height: 42px;
+  padding: 0 0.85rem;
+  border-bottom-width: 2px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+html[data-ui="app"] .wf-section:hover {
+  color: var(--text);
+}
+
+html[data-ui="app"] .wf-side {
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--ui-dots) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+html[data-ui="app"] .wf-node {
+  border-radius: 12px;
+  box-shadow: var(--ui-sh-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+html[data-ui="app"] .wf-node:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--ui-sh-md);
+}
+
+html[data-ui="app"] .wf-node.is-on {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring), var(--ui-sh-md);
+}
+
+html[data-ui="app"] .wf-node-num {
+  border-radius: 7px;
+}
+
+html[data-ui="app"] .wf-route,
+html[data-ui="app"] .wf-card {
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+}
+
+html[data-ui="app"] .wf-seg {
+  padding: 3px;
+  background-color: var(--ui-subtle);
+  border-radius: var(--ui-r);
+}
+
+html[data-ui="app"] .wf-input,
+html[data-ui="app"] .wf-textarea,
+html[data-ui="app"] .wf-host select {
+  border-radius: var(--ui-r-sm);
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .wf-input:focus,
+html[data-ui="app"] .wf-textarea:focus,
+html[data-ui="app"] .wf-host select:focus {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring);
+  outline: none;
+}
+
+html[data-ui="app"] .wf-add {
+  border-radius: var(--ui-r);
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+html[data-ui="app"] .wf-add:hover {
+  border-color: var(--red);
+  background-color: var(--red-soft);
+  color: var(--red);
+}
+
+/* ============================================================= validation */
+
+html[data-ui="app"] .vl-way {
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+  transition: border-color 0.18s var(--ui-ease), box-shadow 0.18s var(--ui-ease),
+    transform 0.18s var(--ui-ease);
+}
+
+html[data-ui="app"] .vl-way:hover {
+  box-shadow: var(--ui-sh-lg);
+  transform: translateY(-2px);
+}
+
+html[data-ui="app"] .vl-way.is-on {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring), var(--ui-sh-md);
+  transform: none;
+}
+
+html[data-ui="app"] .vl-way-icon {
+  border-radius: 10px;
+}
+
+html[data-ui="app"] .vl-quiet,
+html[data-ui="app"] .vl-table-wrap {
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+}
+
+html[data-ui="app"] .vl-table th {
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+html[data-ui="app"] .vl-pill {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* ================================================================ connect */
+
+html[data-ui="app"] .cn {
+  max-width: 800px;
+  padding: 2.25rem 1.5rem 3rem;
+}
+
+html[data-ui="app"] .cn-title,
+html[data-ui="app"] .vl .vl-title,
+html[data-ui="app"] .rs-title {
+  letter-spacing: -0.03em;
+}
+
+html[data-ui="app"] .cn-card {
+  padding: 1.35rem 1.4rem;
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+  transition: box-shadow 0.18s var(--ui-ease);
+}
+
+html[data-ui="app"] .cn-card:hover {
+  box-shadow: var(--ui-sh-md);
+}
+
+html[data-ui="app"] .cn-card + .cn-card {
+  margin-top: 1rem;
+}
+
+html[data-ui="app"] .cn-logo {
+  border-radius: 12px;
+}
+
+html[data-ui="app"] .cn-card-title {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+html[data-ui="app"] .cn-badge {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+html[data-ui="app"] .cn-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  background-color: var(--surface-alt);
+}
+
+html[data-ui="app"] .cn-note {
+  border-radius: var(--ui-r);
+}
+
+/* ========================================================= design studio */
+/* The gallery and editor frame only; the canvas and tile art are the form. */
+
+html[data-ui="app"] .ds-top {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .ds-gal-title {
+  letter-spacing: -0.03em;
+}
+
+html[data-ui="app"] .ds-btn {
+  border-radius: var(--ui-r);
+  font-weight: 600;
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .ds-btn-primary {
+  box-shadow: var(--ui-sh-xs), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+html[data-ui="app"] .ds-search {
+  border-radius: var(--ui-r);
+  box-shadow: var(--ui-sh-xs);
+}
+
+html[data-ui="app"] .ds-tile {
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-sh-sm);
+}
+
+html[data-ui="app"] .ds-tile:hover {
+  border-color: var(--border);
+  box-shadow: var(--ui-sh-lg);
+}
+
+html[data-ui="app"] .ds-tile.is-applied {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring), var(--ui-sh-md);
+}
+
+html[data-ui="app"] .ds-tile-new {
+  background-color: transparent;
+  border: 1.5px dashed color-mix(in srgb, var(--border-strong) 50%, transparent);
+  box-shadow: none;
+}
+
+html[data-ui="app"] .ds-tile-new:hover {
+  background-color: var(--red-soft);
+  border-color: var(--red);
+  box-shadow: none;
+}
+
+html[data-ui="app"] .ds-rail {
+  background-color: var(--surface);
+}
+
+html[data-ui="app"] .ds-rail-item {
+  border-radius: var(--ui-r);
+}
+
+html[data-ui="app"] .ds-panel {
+  background-color: var(--surface);
+}
+
+html[data-ui="app"] .ds-group-title {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+html[data-ui="app"] .ds-dialog-input {
+  border-radius: var(--ui-r-sm);
+}
+
+html[data-ui="app"] .ds-dialog-input:focus {
+  border-color: var(--red);
+  box-shadow: var(--ui-ring);
+}
+
+/* ================================================ dark-mode fixes (chrome) */
+
+/* The logo's wordmark is dark ink. In dark mode, flip its lightness and
+   keep its hues, so the gift-red stays red and the text turns light. */
+html[data-ui="app"][data-theme="dark"] .brand-logo {
+  filter: invert(1) hue-rotate(180deg) saturate(1.4);
+}
+
+/* Selection on the canvas never paints over the form: outline only, so a
+   light theme stays light in dark mode and the other way round. */
+html[data-ui="app"] .fb-slot:hover,
+html[data-ui="app"] .fb-slot.is-on {
+  background-color: transparent;
+}
+
+/* Validation choices are buttons: give their text the app's ink. */
+html[data-ui="app"] .vl-way {
+  color: var(--text);
+}

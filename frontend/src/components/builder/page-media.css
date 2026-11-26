@@ -1,0 +1,153 @@
+/* ============================================================
+   A page's own picture, laid out around that page's questions.
+   The six choices match the theme's Background layouts, so
+   "Left half" means the same thing in both places.
+   ============================================================ */
+
+.pm {
+  display: flex;
+  gap: 1.25rem;
+  width: 100%;
+  min-height: 0;
+}
+
+.pm-media {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.pm-media img,
+.pm-media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  object-fit: cover;
+}
+
+.pm-media figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.4rem 0.6rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.pm-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ---------- the six layouts ---------- */
+
+.pm-full {
+  position: relative;
+  display: block;
+}
+
+.pm-full .pm-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 0;
+}
+
+.pm-full .pm-body {
+  position: relative;
+  z-index: 1;
+}
+
+.pm-left-half .pm-media,
+.pm-right-half .pm-media {
+  flex-basis: 46%;
+}
+
+.pm-left-tile .pm-media,
+.pm-right-tile .pm-media {
+  flex-basis: 30%;
+}
+
+.pm-right-half,
+.pm-right-tile {
+  flex-direction: row-reverse;
+}
+
+.pm-banner {
+  flex-direction: column;
+}
+
+.pm-bottom {
+  flex-direction: column-reverse;
+}
+
+.pm-banner .pm-media,
+.pm-bottom .pm-media {
+  flex-basis: auto;
+  max-height: 260px;
+}
+
+/* A theme's own radius wins when there is one. */
+.tf .pm-media {
+  border-radius: var(--t-radius);
+}
+
+/* On a phone the picture never squeezes the questions out. */
+@media (max-width: 720px) {
+  .pm {
+    flex-direction: column;
+  }
+
+  .pm-media {
+    flex-basis: auto;
+    max-height: 220px;
+  }
+}
+/* ---------- whole picture, rather than cropped to fill ---------- */
+
+.pm-fit-contain .pm-media img,
+.pm-fit-contain .pm-media video {
+  object-fit: contain;
+}
+
+/* ============================================================
+   A background picture behind a whole page.
+
+   Put `has-pb` on the box the picture should fill and render
+   <PageBackdrop /> inside it. The picture sits at z-index -1
+   inside that box's own stacking context, so it is above the
+   box's background colour and below everything else in it.
+   ============================================================ */
+
+.has-pb {
+  position: relative;
+  isolation: isolate;
+}
+
+.pb {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pb img,
+.pb video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pb-veil {
+  position: absolute;
+  inset: 0;
+  background-color: #000;
+}
